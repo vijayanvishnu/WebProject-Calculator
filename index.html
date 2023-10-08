@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link href="calculator.css" rel="stylesheet" />
+    <script src="calculator.js"></script>
+</head>
+<body>
+    <h1 style="text-align: center;">
+        Basic Calculator
+    </h1>
+    <table class="table">
+        <tr class="display-row">
+            <td colspan="4" class="display-data component" id="screen">
+
+            </td>
+        </tr>
+        <tr class="row-1">
+            <td class="key-ac component keys" id="key-ac">
+                AC
+            </td>
+            <td class="key-del component keys" id="key-del">
+                DEL
+            </td>
+            <td class="key-mod component keys" id="key-mod">
+                %
+            </td>
+            <td class="key-div component keys" id="key-div">
+                /
+            </td>
+        </tr>
+        <tr class="row-2">
+            <td class="key-7 component" id="key-7">
+                7
+            </td>
+            <td class="key-8 component" id="key-8">
+                8
+            </td>
+            <td class="key-9 component" id="key-9">
+                9
+            </td>
+            <td class="key-mul component keys" id="key-mul">
+                *
+            </td>
+        </tr>
+        <tr class="row-3">
+            <td class="key-4 component" id="key-4">
+                4
+            </td>
+            <td class="key-5 component" id="key-5">
+                5
+            </td>
+            <td class="key-6 component" id="key-6">
+                6
+            </td>
+            <td class="key-min component keys" id="key-min">
+                -
+            </td>
+        </tr>
+        <tr class="row-4">
+            <td class="key-1 component" id="key-1">
+                1
+            </td>
+            <td class="key-2 component" id="key-2">
+                2
+            </td>
+            <td class="key-3 component" id="key-3">
+                3
+            </td>
+            <td class="key-add component keys" id="key-add">
+                +
+            </td>
+        </tr>
+        <tr class="row-5">
+            <td class="key-zero component" id="key-0">
+                0
+            </td>
+            <td class="key-tzero component" id="key-00">
+                00
+            </td>
+            <td class="key-dot component" id="key-dot">
+                .
+            </td>
+            <td class="key-eq component keys" id="key-eq">
+                =
+            </td>
+        </tr>
+    </table>
+    <script>
+        
+    let scn = document.getElementById('screen')
+    let string = ""
+    let arr = new Array()
+    let map = new Map()
+    for(let i = 0 ; i < 10 ; i++){
+        arr.push('key-'+i)
+        map.set(document.getElementById('key-'+i),i)
+    }
+    scn.innerText = string
+    arr.forEach(k=> {
+        let ele = document.getElementById(k)
+        ele.addEventListener('click',()=>{
+            string = string + map.get(ele);
+            scn.innerText = string
+        })
+    })
+    document.getElementById('key-ac').addEventListener('click',()=>{
+        string = ''
+        scn.innerText = string
+    })
+    document.getElementById('key-del').addEventListener('click',()=>{
+        string = string.slice(0, -1);
+        scn.innerText = string
+    })
+    document.getElementById('key-add').addEventListener('click',()=>{
+        string = string + '+';
+        scn.innerText = string
+    })
+    document.getElementById('key-min').addEventListener('click',()=>{
+        string = string + '-';
+        scn.innerText = string
+    })
+    document.getElementById('key-mod').addEventListener('click',()=>{
+        string = string + '%';
+        scn.innerText = string
+    })
+    document.getElementById('key-mul').addEventListener('click',()=>{
+        string = string + '*';
+        scn.innerText = string
+    })
+    document.getElementById('key-dot').addEventListener('click',()=>{
+        string = string + '.';
+        scn.innerText = string
+    })
+    document.getElementById('key-div').addEventListener('click',()=>{
+        string = string + '/';
+        scn.innerText = string
+    })
+    document.getElementById('key-00').addEventListener('click',()=>{
+        string = string + '00';
+        scn.innerText = string
+    })
+    document.getElementById('key-eq').addEventListener('click',()=>{
+        string = new String(calculate(string));
+        scn.innerText = string
+    })
+    var calculate = function(s) {
+    let stack = [];
+    let sign = '+';
+    let currNumber = 0;
+    
+    for(let i = 0; i < s.length; i++) {
+        const letter = s[i]; 
+        
+        if(isDigit(letter)) {
+            const num = Number(letter);
+            currNumber = currNumber * 10 + num; 
+        } else if(isSign(letter)) {
+            takeCareOfPrevSign(sign, stack, currNumber);
+            
+            currNumber = 0;
+            sign = letter;
+        } else if(letter === '(') {
+            stack.push(sign + letter);
+            
+            sign = '+';
+            currNumber = 0;
+        } else {
+            takeCareOfPrevSign(sign, stack, currNumber);
+            
+            let bracelentNum = 0;
+            
+            while(stack[stack.length - 1] !== '*(' && stack[stack.length - 1] !== '/(' && stack[stack.length - 1] !== '-(' && stack[stack.length - 1] !== '+(') {
+                bracelentNum = bracelentNum + stack.pop();
+            }
+            
+            const openerStr = stack.pop();
+            sign = openerStr[0];
+            
+            takeCareOfPrevSign(sign, stack, bracelentNum);
+            
+            currNumber = stack.pop();
+            sign = '+';
+        }
+    }
+    
+    takeCareOfPrevSign(sign, stack, currNumber); 
+    
+    let result = 0;
+    while(stack.length) {
+        result = result + stack.pop();
+    }
+    
+    return result;
+};
+
+    function takeCareOfPrevSign(sign, stack, currNumber) {
+        if(sign === '*') {
+            stack.push(stack.pop() * currNumber);
+        } else if(sign === '/') {
+            const stackNum = stack.pop();
+            if(stackNum < 0 && currNumber > 0 || stackNum > 0 && currNumber < 0) {
+                stack.push(Math.ceil(stackNum / currNumber))
+            } else {
+                stack.push(Math.floor(stackNum / currNumber))
+            }
+        } else if(sign === '-') {
+            stack.push(-1 * currNumber);
+        } else {
+            stack.push(currNumber);
+        }
+    }
+
+    function isDigit(letter) {
+        return letter === '0' || letter === '1' || letter === '2' || letter === '3' || letter === '4' || letter === '5' || letter === '6' || letter === '7' || letter === '8' || letter === '9';
+    }
+        
+    function isSign(sign) {
+        return sign === '*' || sign === '/' || sign === '+' || sign === '-';
+    }
+
+    function isImmediateSign(sign) {
+        return sign === '*' || sign === '/';
+    }
+    </script>
+</body>
+</html>
